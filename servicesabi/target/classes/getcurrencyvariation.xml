@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd">
+    <flow name="ServicesabiCurrencyFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/getcurrency" doc:name="HTTP"/>
+        <logger message="===start======" level="INFO" doc:name="Logger Start"/>
+        <enricher target="#[flowVars.apiStartReturn]" doc:name="Message Enricher">
+            <http:request config-ref="HTTP_Request_Configuration" path="/historical" method="GET" doc:name="HTTP_api">
+                <http:request-builder>
+                    <http:query-param paramName="access_key" value="${apilayerKey}"/>
+                    <http:query-param paramName="date" value="#[message.inboundProperties.'http.query.params'.startdate]"/>
+                    <http:query-param paramName="currencies" value="EUR"/>
+                    <http:query-param paramName="format" value="1"/>
+                </http:request-builder>
+            </http:request>
+        </enricher>
+        <http:request config-ref="HTTP_Request_Configuration" path="/historical" method="GET" doc:name="HTTP_api_end">
+            <http:request-builder>
+                <http:query-param paramName="access_key" value="${apilayerKey}"/>
+                <http:query-param paramName="date" value="#[message.inboundProperties.'http.query.params'.enddate]"/>
+                <http:query-param paramName="currencies" value="EUR"/>
+                <http:query-param paramName="format" value="1"/>
+            </http:request-builder>
+        </http:request>
+        <logger message="RECEIVED FROM API START DATE ===========  #[flowVars.apiStartReturn]" level="INFO" doc:name="start_received from api"/>
+        <logger message="RECEIVED FROM API END DATE ===========  #[message.payloadAs(java.lang.String)]" level="INFO" doc:name="end_received from api"/>
+        <dw:transform-message metadata:id="a68e6dc8-c73c-4423-9994-f6e9ce54bf0a" doc:name="Transform Message">
+            <dw:input-payload/>
+            <dw:input-variable variableName="apiStartReturn"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+%var startUSDEUR=flowVars.apiStartReturn.quotes.USDEUR
+%var endUSDEUR = payload.quotes.USDEUR
+%var diff = endUSDEUR - startUSDEUR
+%var result = ((diff/startUSDEUR) * 100)[0..5]
+---
+{
+  start_rate:startUSDEUR,
+  end_rate:endUSDEUR,
+  variation: 0 when diff == 0 otherwise result,
+  Messagem: "There was no variation" when diff == 0 otherwise "Success"
+  }]]></dw:set-payload>
+        </dw:transform-message>
+
+        <logger message="FINAL MESSAGE =============== #[message.payloadAs(java.lang.String)]" level="INFO" doc:name="Response log"/>
+        <exception-strategy ref="servicesabiCatch_Exception_Strategy" doc:name="Reference Exception Strategy"/>
+    </flow>
+</mule>

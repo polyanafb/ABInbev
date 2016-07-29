@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:cluster="http://www.mulesoft.org/schema/mule/ee/cluster" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:wmq="http://www.mulesoft.org/schema/mule/ee/wmq" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/ee/wmq http://www.mulesoft.org/schema/mule/ee/wmq/current/mule-wmq-ee.xsd">
+    <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="8080" doc:name="HTTP Listener Configuration"/>
+    <http:request-config name="HTTP_Request_Configuration" host="apilayer.net" port="80" basePath="/api" doc:name="HTTP Request Configuration"/>
+    <http:request-config name="HTTP_Request_Configuration_LastFM" host="ws.audioscrobbler.com" port="80" basePath="/2.0" doc:name="HTTP Request Configuration"/>
+    <http:request-config name="HTTP_Request_ConfigurationMovieDb" host="api.themoviedb.org" port="80" basePath="3/movie/popular" doc:name="HTTP Request Configuration"/>
+    <configuration defaultExceptionStrategy-ref="servicesabiCatch_Exception_Strategy" doc:name="Configuration">
+        <http:config useTransportForUris="false"/>
+    </configuration>
+    <flow name="servicesabiMoviesFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/getmovie" doc:name="HTTP"/>
+        <http:request config-ref="HTTP_Request_ConfigurationMovieDb" path="/" method="GET" doc:name="HTTP">
+            <http:request-builder>
+                <http:query-param paramName="api_key" value="${moviedbkey}"/>
+            </http:request-builder>
+        </http:request>
+        <dw:transform-message metadata:id="e3329df0-dc7e-4f64-96a8-ad79bf12c14b" doc:name="Transform Message">
+            <dw:input-payload doc:sample="json\moviedb\jsonMovie"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+movies: payload.results[0..9] map {
+	releaseDate: $.release_date,
+	title: $.title,
+	language: $.original_language,
+	poster: $.poster_path
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <logger level="INFO" doc:name="Movie Response" message="Movies Response ======================  #[message.payloadAs(java.lang.String)]"/>
+        <exception-strategy ref="servicesabiCatch_Exception_Strategy" doc:name="Reference Exception Strategy"/>
+    </flow>
+    <catch-exception-strategy name="servicesabiCatch_Exception_Strategy">
+        <set-variable variableName="originalException" value="#[org.mule.util.ExceptionUtils.getRootCause(exception)]" doc:name="Exception"/>
+        <logger message="code: #[org.mule.config.ExceptionHelper.getErrorCode(flowVars.originalException.class)] - #[flowVars.originalException.class] -&gt; #[flowVars.originalException]" level="ERROR" doc:name="ERROR"/>
+        <set-payload value="ERROR EXCEPTION - Please contact the system administrator." doc:name="Set Payload"/>
+    </catch-exception-strategy>
+</mule>

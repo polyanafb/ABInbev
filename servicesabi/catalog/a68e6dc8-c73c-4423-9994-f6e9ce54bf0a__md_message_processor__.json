@@ -1,0 +1,17 @@
+{
+    "inputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "#_custom_mule_metadata_type_#",
+            "typeId": "movie"
+        },
+        "flowVariables": {
+            "apiStartReturn": {
+                "connectorName": "#_custom_mule_metadata_type_#",
+                "typeId": "movie"
+            }
+        }
+    },
+    "outputMessageMetadata": {},
+    "id": "a68e6dc8-c73c-4423-9994-f6e9ce54bf0a",
+    "version": "5.2.0.0"
+}
