@@ -13,76 +13,42 @@ https://www.themoviedb.org/
 http://www.last.fm/
 https://apilayer.com/
 
-### Installing
-
-1.Download the zip file here "app_servicesabi.zip".
-2.Sign in the cloudhub. https://anypoint.mulesoft.com/login/#/signin
-3.
-
-Stay what the step will be
-
-```
-Give the example
-```
-
-And repeat
-
-```
-until finished
-```
-
-End with an example of getting some data out of the system or using it for a little demo
-
 ## Running the tests
 
-Explain how to run the automated tests for this system
-
-### Break down into end to end tests
-
-Explain what these tests test and why
-
-```
-Give an example
-```
-
-### And coding style tests
-
-Explain what these tests test and why
-
-```
-Give an example
-```
+To call the integrations you need to send some parameters.
+ApiLayer: startdate and enddate parameters. Format: yyyy-mm-ss
+LastFM: artist and track parameters
+MovieDB: no parameters is necessary
+Examples (If you are testing already in the cloudhub, you need to use the cloudhub url. No more localhost.):
+ApiLayer:http://localhost:8080/getcurrency?startdate=2016-04-01&enddate=2016-04-04
+LastFM: http://localhost:8080/getlastfminfo?artist=cher&track=believe
+MovieDB: http://localhost:8080/getmovie
 
 ## Deployment
 
-Add additional notes about how to deploy this on a live system
+1.Download the zip file here "app_servicesabi.zip".
+2.Sign in the cloudhub. https://anypoint.mulesoft.com/login/#/signin
+3.Create a new application
+4.Upload zip file.
+5.Fill all settings.
+6. Fill the properties with the same properties you have into mule-app.properties - Available in 
+7.Apply.
+8. After it's uploaded, start the service.
 
 ## Built With
 
-* Dropwizard - Bla bla bla
-* Maven - Maybe
-* Atom - ergaerga
-
-## Contributing
-
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
+*Anypoint Studio 6.0.1 
 
 ## Versioning
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
+For the versions available, see the GitHub. Test-knowledge-Products branch.
 
 ## Authors
 
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
-
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+* **Polyana Fernandes**
 
 ## Acknowledgments
 
-* Hat tip to anyone who's code was used
-* Inspiration
-* etc
+* Integration
+* REST and HTTP
+* Mulesoft and MEL
